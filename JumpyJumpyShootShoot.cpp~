@@ -1,0 +1,449 @@
+
+#include"character.h"
+#include"squater.h"
+#include"bullet.h"
+#include"player.h"
+#include"platform.h"
+#include"pewpew.h"
+
+
+
+
+
+#include "sound.h"
+
+int WIDTH = 1000;
+int HEIGHT = 500;
+char programName[] = "Jumpy Jumpy Shoot Shoot";
+int level, playerright, playerleft, greenball, squatterleft, squatterright, groundtexture;
+int a = 0, w = 0, d = 0, s = 0, space = 0;
+FMOD::Sound *Jump_Sound, *Music;
+double startTime;
+int counter = 0;
+int screen = 0;
+char titletest[] = "Jumpy Jumpy Shoot Shoot";
+char start[] = "Start";
+char info[] = "Instructions";
+bool buttonIsPressed = false; 
+Player test {playerright, 3, 2, 40, 40};
+Character ground1{playerright, 0, 470, 100, 30};
+Character ground2{playerright, 100, 470, 100, 30};
+Character ground3{playerright, 200, 470, 100, 30};
+Character ground4{playerright, 900, 470, 100, 30};
+Platform testplat1{playerright, 200, 390, 100, 20};
+Platform testplat2{playerright, 100, 310, 100, 20};
+Platform testplat3{playerright, 200, 230, 100, 20};
+Platform testplat4{playerright, 300, 150, 100, 20};
+Platform testplat5{playerright, 400, 230, 100, 20};
+Platform testplat6{playerright, 500, 310, 100, 20};
+Platform testplat7{playerright, 600, 230, 100, 20};
+Platform testplat8{playerright, 700, 310, 100, 20};
+Platform testplat9{playerright, 800, 390, 100, 20};
+Character ending{playerright, 950, 430, 40, 40};
+Squatter testsquat1{100, 260, playerright, 130, 430, 40, 40}; 
+Squatter testsquat2{400, 460, playerright, 460, 190, 40, 40};
+Squatter testsquat3{600, 660, playerright, 640, 190, 40, 40};
+Squatter testsquat4{100, 160, playerright, 100, 270, 40, 40};
+Bullet testbullet{150, 160, playerright, 150, 200, 20, 20};
+
+
+
+void drawBox(double x, double y, double width, double height)
+{
+  glBegin(GL_POLYGON);
+    glVertex2f(x, y);  // upper left
+    glVertex2f(x, y + height);  // lower left
+    glVertex2f(x + width, y + height);  // lower right
+    glVertex2f(x + width, y);  // upper right
+  glEnd();
+}
+
+void drawText(double x, double y, const char *text)
+{
+  glRasterPos2f( x, y );
+  int length = strlen(text);
+  for (int i = 0; i < length; i++)
+    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+}
+
+void drawWindow()
+{
+  // clear the buffer
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // draw stuff
+  if( screen == 1){
+  drawTexture(level,  0,0,    1000, 500); // texID,   x,y,    width, height
+  testplat1.draw();
+  testplat2.draw();
+  testplat3.draw();
+  testplat4.draw();
+  testplat5.draw();
+  testplat6.draw();
+  testplat7.draw();
+  testplat8.draw();
+  testplat9.draw();
+  ending.draw();
+  testsquat1.draw();
+  testsquat2.draw();
+  testsquat3.draw();
+  testsquat4.draw();
+  ground1.draw();
+  ground2.draw();
+  ground3.draw();
+  ground4.draw();
+  test.draw();
+  }
+    if( screen == 0){
+      glColor3f(0., .5, 0.);
+      drawBox( 0, 0,   1000, 500 );
+      glColor3f(.75, .75, .75);
+      drawBox( 123, 120,  240, 30);
+      glColor3f(.75, .75, .75);
+      drawBox( 123, 180,  240, 30);
+      glColor3f(1., 1., 1.);
+      drawBox( 127, 124,  232, 22);
+      glColor3f(1., 1., 1.);
+      drawBox( 127, 184,  232, 22);
+      glColor3f(1., 1., 1.);
+      drawText(140, 80, titletest);
+      glColor3f(.0, .0, .0);
+      drawText(220, 140, start);
+      glColor3f(.0, .0, .0);
+      drawText(190, 200, info);
+      }
+  // tell the graphics card that we're done-- go ahead and draw!
+  //   (technically, we are switching between two color buffers...)
+  glutSwapBuffers();
+}
+
+bool onButton(int x, int y)
+{
+  return x >= 123  && y >= 120 &&
+         x <= 123 + 232 &&
+         y <= 120  + 30;
+}
+
+void mouse(int mouseButton, int state, int x, int y)
+{
+  if ( GLUT_LEFT_BUTTON == mouseButton ) {
+    if ( GLUT_DOWN == state ) {
+      // the user just pressed down on the mouse-- do something
+      if ( onButton(x,y) ) {buttonIsPressed = true;
+	screen = 1;
+	 if (USE_SOUND) playSound(Music, 1);
+      }
+      else buttonIsPressed = false;
+    } else {
+      // the user just let go the mouse-- do something
+      buttonIsPressed = false;
+    }
+  } else if ( GLUT_RIGHT_BUTTON == mouseButton ) {
+  }
+  glutPostRedisplay();
+}
+
+void keyboard( unsigned char c, int x, int y )
+{
+  int win = glutGetWindow();
+  switch(c) {
+  case 'a': a = 1;
+    break;
+  case 'd': d = 1;
+    break;
+  case 'w': w = 1;
+    break;
+  case 's': s = 1;
+    break;
+  case ' ': space = 1;
+    break;
+    case 'q':
+    case 'Q':
+    case 27:
+      // get rid of the window (as part of shutting down)
+      glutDestroyWindow(win);
+      exit(0);
+      break;
+    default:
+      break;
+  }
+  glutPostRedisplay();
+}
+
+void keyboardUp( unsigned char c, int x, int y )
+{
+  int win = glutGetWindow();
+  switch(c) {
+  case 'a': a = 0;
+    break;
+  case 'd': d = 0;
+    break;
+  case 'w': w = 0;
+    break;
+  case 's': s = 0;
+    break;
+  case ' ': space = 0;
+    break;
+    case 'q':
+    case 'Q':
+    case 27:
+      // get rid of the window (as part of shutting down)
+      glutDestroyWindow(win);
+      exit(0);
+      break;
+    default:
+      break;
+  }
+  glutPostRedisplay();
+}
+
+void reshape(int w, int h)
+{
+   glViewport(0, 0, (GLsizei) w, (GLsizei) h);
+   WIDTH = w;  HEIGHT = h;
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(0., WIDTH-1, HEIGHT-1, 0., -1.0, 1.0);
+}
+
+double getCurrentTime()
+{
+  struct timeval tv = {0,0};
+  struct timezone tz;
+  gettimeofday(&tv, &tz);
+  // cout << "tv is " << tv.tv_sec << " micro " << tv.tv_usec << endl;
+  return tv.tv_sec + tv.tv_usec/(double)1000000.;
+}
+
+void idle()
+{
+  // figure out whether it is time to change the counter.
+  //   we want the counter to change once per second, so we want the
+  //   elapsed time (since the beginning of the program) to be 
+  //   the same as the elapsedTime (rounded down)
+  double elapsedTime = getCurrentTime() - startTime;
+  elapsedTime = elapsedTime*20;
+    if (test.getdirection() == false){
+  test.updatetextureID(playerright);
+  }
+  if (test.getdirection() == true){
+    test.updatetextureID(playerleft);
+  }
+  if (testsquat1.getdirection() == true){
+    testsquat1.updatetextureID(squatterright);
+      }
+  if(testsquat1.getdirection() == false){
+    testsquat1.updatetextureID(squatterleft);
+  }
+  if (testsquat2.getdirection() == true){
+    testsquat2.updatetextureID(squatterright);
+      }
+  if(testsquat2.getdirection() == false){
+    testsquat2.updatetextureID(squatterleft);
+  }
+  if (testsquat3.getdirection() == true){
+    testsquat3.updatetextureID(squatterright);
+      }
+  if(testsquat3.getdirection() == false){
+    testsquat3.updatetextureID(squatterleft);
+  }
+  if (testsquat4.getdirection() == true){
+    testsquat4.updatetextureID(squatterright);
+      }
+  if(testsquat4.getdirection() == false){
+    testsquat4.updatetextureID(squatterleft);
+  }
+  if ( (int)elapsedTime > counter ) {
+    // ok, enough time has passed that we should increase the counter
+    test.velocity = test.velocity - 1;
+    if ( ground1.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      test.onGround = 0;
+      test.velocity = 0;
+      test.updateyposition(ground1.getyposition() - test.height);
+    }
+  if ( ground2.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      test.onGround = 0;
+      test.velocity = 0;
+      test.updateyposition(ground2.getyposition() - test.height);
+    }
+  if ( ground3.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      test.onGround = 0;
+      test.velocity = 0;
+      test.updateyposition(ground3.getyposition() - test.height);
+    }
+  if ( ground4.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      test.onGround = 0;
+      test.velocity = 0;
+      test.updateyposition(ground4.getyposition() - test.height);
+    }
+    if ( s == 0 ){
+        if ( testplat1.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat1.getyposition() - test.getheight());
+	}
+        if ( testplat2.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat2.getyposition() - test.getheight());
+	}
+        if ( testplat3.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat3.getyposition() - test.getheight());
+	}
+        if ( testplat4.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat4.getyposition() - test.getheight());
+	}
+        if ( testplat5.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat5.getyposition() - test.getheight());
+	}
+        if ( testplat6.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat6.getyposition() - test.getheight());
+	}
+        if ( testplat7.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat7.getyposition() - test.getheight());
+	}
+        if ( testplat8.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat8.getyposition() - test.getheight());
+	}
+        if ( testplat9.checktouch(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+	  test.onGround = 0;
+	  test.velocity = 0;
+	  test.updateyposition(testplat9.getyposition() - test.getheight());
+	}
+    }
+    if ( w == 1 && test.onGround == 0){
+      test.onGround = 1;
+      test.velocity = test.velocity + 12;
+      if (USE_SOUND) playSound(Jump_Sound, 1);
+    }
+    if ( a == 1){
+      test.updatedirection(true);
+      test.xposition = test.xposition - 4;
+    }
+    if ( d == 1){
+      test.updatedirection(false);
+      test.xposition = test.xposition + 4;
+    }
+    test.updateyposition(test.getyposition() - test.velocity);
+    testsquat1.move();
+    testsquat2.move();
+    testsquat3.move();
+    testsquat4.move();
+    if ( testsquat1.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      cout << "You lose" << endl;
+      test.updatexposition(0);
+      test.updateyposition(430);
+    }
+    if ( testsquat2.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      cout << "You lose" << endl;
+      test.updatexposition(0);
+      test.updateyposition(430);
+    }
+    if ( testsquat3.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      cout << "You lose" << endl;
+      test.updatexposition(0);
+      test.updateyposition(430);
+    }
+    if ( testsquat4.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      cout << "You lose" << endl;
+      test.updatexposition(0);
+      test.updateyposition(430);
+    }
+    if ( ending.checkcolide(test.getxposition(), test.getyposition(), test.getwidth(), test.getheight()) == 1){
+      cout << "You Win!" << endl;
+      test.updatexposition(0);
+      test.updateyposition(430);
+    }
+    if ( test.getyposition() > 500 ){
+      cout << "You fell to your doom" << endl;
+      test.updatexposition(0);
+      test.updateyposition(430);
+    }
+  counter++;
+    glutPostRedisplay();
+}
+}
+
+
+void init(void)
+{
+  // clear the window to black
+  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // set up the coordinate system:  number of pixels along x and y
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0., WIDTH-1, HEIGHT-1, 0., -1.0, 1.0);
+
+  // allow blending (for transparent textures)
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
+  // welcome message
+  cout << "Welcome to " << programName << "." << endl;
+}
+
+void init_gl_window()
+{
+  char *argv[] = { programName };
+  int argc = sizeof(argv) / sizeof(argv[0]);
+  glutInit(&argc, argv);
+  glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE );
+  glutInitWindowSize(WIDTH,HEIGHT);
+  glutInitWindowPosition(100,100);
+  glutCreateWindow(programName);
+  init();
+
+  greenball = loadTexture("Green_ball.pam");
+  playerright = loadTexture("playeright.pam");
+  playerleft = loadTexture("playerleft.pam");
+  level = loadTexture("BackGround.pam");
+  squatterleft = loadTexture("squatterLeft.pam");
+  squatterright = loadTexture("squatterRight.pam");
+  groundtexture = loadTexture("Platform.pam");
+  testplat1.updatetextureID(groundtexture);
+  testplat2.updatetextureID(groundtexture);
+  testplat3.updatetextureID(groundtexture);
+  testplat4.updatetextureID(groundtexture);
+  testplat5.updatetextureID(groundtexture);
+  testplat6.updatetextureID(groundtexture);
+  testplat7.updatetextureID(groundtexture);
+  testplat8.updatetextureID(groundtexture);
+  testplat9.updatetextureID(groundtexture);
+  ground1.updatetextureID(groundtexture);
+  ground2.updatetextureID(groundtexture);
+  ground3.updatetextureID(groundtexture);
+  ground4.updatetextureID(groundtexture);
+  ending.updatetextureID(greenball);
+
+  
+
+  glutMouseFunc(mouse);
+  glutDisplayFunc(drawWindow);
+  glutReshapeFunc(reshape);
+  glutKeyboardFunc(keyboard);
+  glutKeyboardUpFunc(keyboardUp);
+  glutIdleFunc(idle);
+  glutMainLoop();
+}
+
+int main()
+{ init_sound_system();
+  Jump_Sound = loadSoundFile("Jump_Sound.wav");
+  Music = loadSoundFile("music.wav");
+  startTime = getCurrentTime();
+  init_gl_window();
+}

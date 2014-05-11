@@ -1,0 +1,31 @@
+#ifndef _BULLET_
+#define _BULLET_
+
+#include "character.h"
+
+class Bullet : public Character{
+ public:
+  int fired = 0;
+  Bullet(int, int, int, int, int);
+  void move(){
+    if (direction == 0){
+    xposition = xposition + 5;
+    }
+    if (direction == 1){
+      xposition = xposition + 5;
+    }
+  }
+ bool checkInMap(int width){
+    if ((xposition + width) < 0){
+      return false;
+    }
+    if (xposition > width){
+      return false;
+    }
+    else return true;
+  }
+    
+};
+
+#endif
+
